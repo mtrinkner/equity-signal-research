@@ -11,7 +11,7 @@ the one you found, and it is willing to tell you no. It has told me no 202 times
 
 ## The finding
 
-I tested 296 strategies for an edge that beats the index after costs. Nothing
+I tested 340 strategies for an edge that beats the index after costs. Nothing
 cleared the bar. Three results, and what makes the project worth reading is how
 each one died.
 
@@ -284,6 +284,7 @@ Every one of these was declared with a written hypothesis before it ran.
 | 15 | Four portfolio constructions, signal held fixed | None beat the plain quintile sort |
 | 15 | Factor attribution of the best book | **The edge was beta and momentum. Residual is negative.** |
 | 23 | Effective breadth, 64 variants, 1,257 names/day | **Breadth saturates at 8 raw / 100 neutral. 0 of 64 cleared BH.** |
+| 26 | Federal contract awards, 101,986 actions, $4.8tn | **Refuted on both declared shape tests. Placebo beat the real dates.** |
 
 ### Why breadth was the wrong lever
 
@@ -374,6 +375,94 @@ recorded here rather than dropped because it was a declared expectation.
 
 Registered as trial 23 with 64 variants **before** it ran. Trial count 232 to
 **296**, which raised the luck bar on everything above.
+
+## Federal contract awards: the sixth data source, and a clean null
+
+The one category left untested was data that is not derived from price at all.
+Every signal that died in this project died the same way, residualising into
+beta, size and momentum, and the breadth work above measured exactly how much:
+5-day reversal lost 92.6% of its variance to the factor set, momentum 88.7%. The
+non-price signals lost almost nothing. So the last idea worth testing was a
+dated, public, non-price event with an obvious cash-flow channel.
+
+**USAspending, transaction level, 101,986 contract actions above $10M from
+2014-01 to 2026-09, $4,798bn obligated.** Declared as trial 26 with 32 variants,
+including both shape predictions, before a single return was computed.
+
+### Four traps, found before the result
+
+**Award-level amounts are cumulative.** A 2015 query returned a Lockheed award
+with a 1993 start date and a **$48bn** total, because `Award Amount` sums every
+modification over an award's life. Keying an event study on that imports the
+future into a 2015 decision. The transaction endpoint gives one row per action
+with its own date and obligation, which is point-in-time by construction.
+
+**Recipient names are retroactively modernised.** "RTX CORPORATION" appears on
+2015 rows, for an entity that did not exist until the 2020 merger and was not
+named RTX until 2023. Which company it actually was is settled by the award
+numbers: the 2015 "RTX" awards are N00019 (NAVAIR) and FA8611 engine contracts,
+so Pratt & Whitney, so United Technologies. The "RAYTHEON COMPANY" rows are
+HQ0276 (Missile Defense) and N00024, so missiles, so the real Raytheon.
+
+**Price series follow the acquirer, not the target.** Checked rather than
+assumed: RTX closed at **$81.94** in mid-2019, which is neither UTX (~$130) nor
+RTN (~$175). It is UTX scaled by the Carrier/Otis spinoff ratio, and $49.93 on
+2020-04-03 is merger-completion day. LHX at $144.54 in June 2018 matches Harris
+exactly. So RTX bars *are* United Technologies and LHX bars *are* Harris, which
+makes those rows priceable and makes Raytheon and L3 rows unpriceable.
+
+**The feed contains enormous source errors.** A 2015 row credits HENSEL PHELPS
+CONSTRUCTION CO with **$92.5bn** across six actions, against roughly $440bn of
+total federal contract obligations that year, for a private builder. Sixteen
+actions above $5bn are flagged rather than deleted, because a silently dropped
+row makes a sample stop matching its own description. Three of them are Lockheed
+F-35 lot awards that are probably real, which is exactly why the flag is a flag.
+
+Also checked rather than assumed: SpaceX is **not** private. It listed on
+2026-06-12 as SPCX. Every one of its contract actions here predates that, and no
+SPCX bars exist, so the rows are unpriceable for a different reason than the one
+I would have written down.
+
+### What the two declared tests said
+
+| | Prediction | Result |
+|---|---|---|
+| **1. Pre-event window** | flat before the action date | **+0.37%**, post-event **-0.01%** |
+| **1b. vs placebo** | n/a | placebo **+1.58%**, so event minus placebo is **-1.21%** |
+| **2. Materiality scaling** | positive and monotone | rank corr **+0.024**, non-monotone |
+
+The placebo is the control that makes this readable, and it is the reason the
+first answer was wrong. Measured on 2015 alone the pre-event CAR was **+12.66%**
+against a placebo of +1.03%, which looked like textbook anticipation: public
+solicitations, run-up before award, selection rather than drift. At the full
+26,643 events it collapses to +0.37% against a placebo of **+1.58%**. The
+placebo is *higher* than the real dates. The 2015 result was 318 events from a
+handful of defense names during a defense rally, and reporting it would have been
+a confident claim about noise.
+
+Implied book, long the top materiality quintile each month, market-adjusted,
+one observation per month so nothing overlaps: **Sharpe 0.159, t = 0.57** over
+152 months. Deflated probability it is real, at 340 registered trials: **0.006**.
+
+### Limitations that are not fixable by better code
+
+**Only 27.3% of actions are priceable, 40.8% of dollars.** Most federal contract
+money goes to entities that cannot be traded: private firms, joint ventures,
+FFRDC consortium LLCs, universities. Electric Boat and Bath Iron Works map to
+General Dynamics and Optum to UnitedHealth, but Hensel Phelps, TriWest, General
+Atomics and the national-laboratory LLCs do not map to anything.
+
+**Survivorship runs one direction.** $172.8bn of Raytheon actions are dropped
+because RTN has no price series, and the price database was built from CURRENT
+index constituents. Dropping acquired companies removes exactly the firms that
+became targets, which is not random with respect to performance.
+
+**Materiality is weakest where it should be strongest.** 17 of 26 tickers have
+point-in-time share counts. The missing ones are the small and mid caps, which is
+precisely where award-over-market-cap would be largest and the mechanism most
+visible.
+
+Trial count 296 to **340**.
 
 ### Why small caps were the wrong lever
 
@@ -588,11 +677,11 @@ finding is that the strategies it studied do not beat the index.
 
 > **Edge Audit** — Python, SQL, R, Excel
 > Built a research pipeline that backtests trading strategies and then audits
-> whether the edge is real. Ingested five independent point-in-time data sources
-> (4.4M daily bars across 1,500 equities, 113K earnings announcements, 453K
+> whether the edge is real. Ingested six independent point-in-time data sources
+> (4.4M daily bars across 1,500 equities, 102K federal contract actions, 113K earnings announcements, 453K
 > as-filed SEC XBRL facts keyed on filing date, 524K insider transactions, 287K
 > short-interest observations). Engineered features in SQL window functions and
-> proved the pipeline leak-free with a truncation-rebuild audit. **Tested 296
+> proved the pipeline leak-free with a truncation-rebuild audit. **Tested 340
 > strategies, logged before each run, and found none that survives: the best was a
 > factor tilt in disguise (+0.34 to -0.17 after neutralizing beta, size and
 > momentum) and the second-best fell from a 1.66 Sharpe to 0.24 once a pagination
@@ -601,6 +690,6 @@ finding is that the strategies it studied do not beat the index.
 One-bullet version:
 
 > - Built a backtesting pipeline that audits its own results across five data
->   sources: 296 strategies tested and logged before each run so a lucky one can't
+>   sources: 340 strategies tested and logged before each run so a lucky one can't
 >   pass as real; the best looked like a 1.66 Sharpe until fixing a bug in my own
 >   data pull doubled the sample and took it to 0.24
